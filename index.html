@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Todo Laetitia</title>
+  <link rel="icon" href="assets/django.png" />
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', sans-serif;
+      color: #fff;
+      background: url("assets/plage.png") center center no-repeat fixed;
+      background-size: contain;
+      background-color: #000;
+    }
+
+    header {
+      text-align: center;
+      padding: 20px;
+    }
+
+    .favicon {
+      width: 80px;
+      border-radius: 50%;
+      box-shadow: 0 0 10px rgba(0,0,0,0.3);
+    }
+
+    .bloc {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      margin: 20px;
+      padding: 15px;
+    }
+
+    input[type="text"], input[type="datetime-local"] {
+      padding: 10px;
+      border: none;
+      border-radius: 5px;
+      width: 90%;
+      max-width: 300px;
+    }
+
+    button {
+      padding: 10px 15px;
+      background-color: #fff;
+      color: #50C878;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      width: 90%;
+      max-width: 500px;
+    }
+
+    li {
+      background-color: rgba(255,255,255,0.1);
+      padding: 10px;
+      margin: 5px 0;
+      border-radius: 5px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-left: 40px;
+    }
+
+    li.checked .texte {
+      text-decoration: line-through;
+      opacity: 0.6;
+    }
+
+    .texte {
+      flex: 1;
+      margin-left: 10px;
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    #agenda {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <audio id="audio-vagues" src="assets/vagues.mp3" autoplay loop></audio>
+
+  <header>
+    <h1>🐾 To do liste - Laetitia</h1>
+    <img src="assets/django.png" alt="Portrait de Django" class="favicon" />
+  </header>
+
+  <main>
+    <section class="bloc">
+      <h2>📌 Mes tâches</h2>
+      <input type="text" id="nouvelle-tache" placeholder="Ajouter une tâche..." />
+      <button id="ajouter">Ajouter</button>
+    </section>
+
+    <section class="bloc" id="liste-taches">
+      <ul></ul>
+    </section>
+
+    <section class="bloc">
+      <button onclick="document.getElementById('agenda').style.display='flex';">📅 Ajouter un rendez-vous</button>
+    </section>
+
+    <section class="bloc" id="agenda">
+      <h2>📌 Mon agenda</h2>
+      <input type="datetime-local" id="rdv-date" />
+      <input type="text" id="rdv-description" placeholder="Description du rendez-vous..." />
+      <label>
+        <input type="checkbox" id="rappel-active" />
+        🔔 Activer rappel sonore à l’heure choisie
+      </label>
+      <button id="ajouter-rdv">Ajouter au calendrier</button>
+    </section>
+
+    <section class="bloc" id="liste-agenda">
+      <h2>📌 Rendez-vous enregistrés</h2>
+      <ul></ul>
+    </section>
+  </main>
+
+  <script>
+    const ajouterBtn = document.getElementById("ajouter");
+    const listeTaches = document.querySelector("#liste-taches ul");
+    const ajouterRdvBtn = document.getElementById("ajouter-rdv");
+    const listeAgenda = document.querySelector("#liste-agenda ul");
+
+    function enregistrerTaches() {
+      const taches = Array.from(listeTaches.children).map(li => ({
+        texte: li.querySelector(".texte").textContent,
+        coche: li.classList.contains("checked")
+      }));
+      localStorage.setItem("taches", JSON.stringify(taches));
+    }
+
+    function enregistrerRDV() {
+      const rdvs = Array.from(listeAgenda.children).map(li => ({
+        texte: li.querySelector(".texte").textContent,
+        coche: li.classList.contains("checked")
+      }));
+      localStorage.setItem("agenda", JSON.stringify(rdvs));
+    }
+
+    function ajouterTache(texte, coche = false) {
+      const li = document.createElement("li");
+      const span = document.createElement("span");
+      span.className = "texte";
+      span.textContent = texte;
+
+      const check = document.createElement("input");
+      check.type = "checkbox";
+      check.checked = coche;
+      check.onclick = () => {
+        li.classList.toggle("checked");
+        enregistrerTaches();
+      };
+
+      const supp = document.createElement("button");
+      supp.textContent = "🗑️";
+      supp.onclick = () => {
+        if (confirm("Supprimer cette tâche ?")) {
+          li.remove();
+          enregistrerTaches();
+        }
+      };
+
+      const actions = document.createElement("div");
+      actions.className = "actions";
+      actions.appendChild(check);
+      actions.appendChild(supp);
+
+      li.appendChild(span);
+      li.appendChild(actions);
+      if (coche) li.classList.add("checked");
+      listeTaches.appendChild(li);
+    }
+
+    function ajouterRDV(texte, coche = false) {
+      const li = document.createElement("li");
+      const span = document.createElement("span");
+      span.className = "texte";
+      span.textContent = texte;
+
+      const check = document.createElement("input");
+      check.type = "checkbox";
+      check.checked = coche;
+      check.onclick = () => {
+        li.classList.toggle("checked");
+        enregistrerRDV();
+      };
+
+      const supp = document.createElement("button");
+      supp.textContent = "🗑️";
+      supp.onclick = () => {
+        if (confirm("Supprimer ce rendez-vous ?")) {
+          li.remove();
+          enregistrerRDV();
+        }
+      };
+
+      const actions = document.createElement("div");
+      actions.className = "actions";
+      actions.appendChild(check);
+      actions.appendChild(supp);
+
+      li.appendChild(span);
+      li.appendChild(actions);
+      if (coche) li.classList.add("checked");
+      listeAgenda.appendChild(li);
+    }
+
+    ajouterBtn.addEventListener("click", () => {
+      const input = document.getElementById("nouvelle-tache");
+      const texte = input.value.trim();
+      if (!texte) return;
+      ajouterTache(texte);
+      enregistrerTaches();
+      input.value = "";
+    });
+
+    ajouterRdvBtn.addEventListener("click", () => {
+      const date = document.getElementById("rdv-date").value;
+      const desc = document.getElementById("rdv-description").value;
+      if (!desc || !date) return;
+      const texte = `${desc} — ${date}`;
+      ajouterRDV(texte);
+      enregistrerRDV();
+      document.getElementById("rdv-date").value = "";
+      document.getElementById("rdv-description").value = "";
+      document.getElementById("agenda").style.display = "none";
+    });
+
+    window.addEventListener("load", () => {
+      const taches = JSON.parse(localStorage.getItem("taches") || "[]");
+      taches.forEach(t => ajouterTache(t.texte, t.coche));
+      const rdvs = JSON.parse(localStorage.getItem("agenda") || "[]");
+      rdvs.forEach(r => ajouterRDV(r.texte, r.coche));
+    });
+  </script>
+</body>
+</html>
