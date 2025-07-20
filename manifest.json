@@ -1,0 +1,16 @@
+{
+  "name": "Todo-list-laetitia",
+  "short_name": "Todo-list",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#50C878",
+  "lang": "fr",
+  "icons": [
+    {
+      "src": "assets/django.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ]
+}
